@@ -132,7 +132,7 @@ class TranslationsController extends Controller
 
         $request = Craft::$app->getRequest();
         $format = strtolower((string)$request->getBodyParam('format', 'csv'));
-        $file = $request->getUploadedFile('file');
+        $file = \yii\web\UploadedFile::getInstanceByName('file');
 
         if (!$file) {
             throw new BadRequestHttpException('No file uploaded.');
