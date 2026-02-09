@@ -144,16 +144,18 @@
   function ensureMenuItem(fieldEl, menuEl) {
     if (menuEl.querySelector('.pt-autotranslate')) return;
     const li = document.createElement('li');
-    const link = document.createElement('a');
-    link.href = '#';
-    link.textContent = 'Autotranslate from...';
-    link.className = 'pt-autotranslate';
-    link.addEventListener('click', function(ev) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'menu-item pt-autotranslate';
+    button.innerHTML = '<span class=\"menu-item-label inline-flex flex-col items-start gap-2xs\">Autotranslate from...</span>';
+    button.addEventListener('click', function(ev) {
       ev.preventDefault();
       openAutotranslateModal(fieldEl, menuEl);
     });
-    li.appendChild(link);
-    menuEl.appendChild(li);
+    li.appendChild(button);
+
+    const list = menuEl.querySelector('ul') || menuEl;
+    list.appendChild(li);
   }
 
   function findMenuForButton(btn, fieldEl) {
