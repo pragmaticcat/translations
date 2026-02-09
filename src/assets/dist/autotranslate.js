@@ -169,6 +169,17 @@
     return document.querySelector('.menu.menu--active, .menu[aria-hidden=\"false\"]');
   }
 
+  function waitForMenu(btn, fieldEl, attempts) {
+    const menuEl = findMenuForButton(btn, fieldEl);
+    if (menuEl) return menuEl;
+    if (attempts <= 0) return null;
+    return new Promise((resolve) => {
+      setTimeout(function() {
+        resolve(waitForMenu(btn, fieldEl, attempts - 1));
+      }, 50);
+    });
+  }
+
   document.addEventListener('click', function(ev) {
     const btn = ev.target.closest('.menubtn');
     if (!btn) return;
@@ -176,10 +187,9 @@
     const fieldEl = btn.closest('.field');
     if (!fieldEl || !isEligibleField(fieldEl)) return;
 
-    setTimeout(function() {
-      const menuEl = findMenuForButton(btn, fieldEl);
+    Promise.resolve(waitForMenu(btn, fieldEl, 6)).then(function(menuEl) {
       if (!menuEl) return;
       ensureMenuItem(fieldEl, menuEl);
-    }, 0);
+    });
   });
 })();
