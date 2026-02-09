@@ -154,7 +154,7 @@
     });
     li.appendChild(button);
 
-    const list = menuEl.querySelector('ul') || menuEl;
+    const list = menuEl.querySelector('ul:first-of-type') || menuEl.querySelector('ul') || menuEl;
     list.appendChild(li);
   }
 
