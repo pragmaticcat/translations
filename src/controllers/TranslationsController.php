@@ -340,7 +340,7 @@ class TranslationsController extends Controller
         }
 
         $isPlainText = $field instanceof PlainText;
-        $isCkeditor = class_exists(\\craft\\ckeditor\\Field::class) && $field instanceof \\craft\\ckeditor\\Field;
+        $isCkeditor = class_exists(\craft\ckeditor\Field::class) && $field instanceof \craft\ckeditor\Field;
         if (!$isPlainText && !$isCkeditor) {
             return $this->asJson(['success' => false, 'error' => 'Field type not supported.']);
         }
