@@ -22,6 +22,10 @@
   }
 
   function isEligibleField(fieldEl) {
+    const type = fieldEl.getAttribute('data-type') || '';
+    if (type.indexOf('craft\\\\fields\\\\PlainText') !== -1) return true;
+    if (type.indexOf('craft\\\\ckeditor\\\\Field') !== -1) return true;
+
     if (fieldEl.querySelector('.ck-editor')) return true;
     if (fieldEl.querySelector('textarea[name^="fields["]')) return true;
     if (fieldEl.querySelector('input[type="text"][name^="fields["]')) return true;
