@@ -2,6 +2,11 @@
 
 {% set title = "Grupos" %}
 
+{% set crumbs = [
+    { label: "Translations"|t('pragmatic-translations'), url: url('pragmatic-translations') },
+    { label: "Grupos"|t('pragmatic-translations'), url: url('pragmatic-translations/groups') },
+] %}
+
 {% block main %}
   <div class="flex justify-between align-center">
     <h1>Grupos</h1>

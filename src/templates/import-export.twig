@@ -2,6 +2,11 @@
 
 {% set title = "Importar/exportar" %}
 
+{% set crumbs = [
+    { label: "Translations"|t('pragmatic-translations'), url: url('pragmatic-translations') },
+    { label: "Importar/exportar"|t('pragmatic-translations'), url: url('pragmatic-translations/import-export') },
+] %}
+
 {% block main %}
   <div class="flex justify-between align-center">
     <h1>Importar/exportar</h1>

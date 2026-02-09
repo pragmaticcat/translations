@@ -2,6 +2,11 @@
 
 {% set title = "Opciones" %}
 
+{% set crumbs = [
+    { label: "Translations"|t('pragmatic-translations'), url: url('pragmatic-translations') },
+    { label: "Opciones"|t('pragmatic-translations'), url: url('pragmatic-translations/options') },
+] %}
+
 {% block main %}
   <div class="flex justify-between align-center">
     <h1>Opciones</h1>
