@@ -17,21 +17,10 @@
     <form method="get" class="flex" style="gap: 12px; align-items: flex-end;">
       <div>
         <label for="q">Search</label>
-        <input class="text" type="text" id="q" name="q" value="{{ search }}" placeholder="Key or description">
-      </div>
-      <div>
-        <label for="group">Group</label>
-        <div class="select">
-          <select id="group" name="group">
-            <option value="">All</option>
-            {% for groupName in groups %}
-              <option value="{{ groupName }}" {{ groupName == group ? 'selected' : '' }}>{{ groupName }}</option>
-            {% endfor %}
-          </select>
-        </div>
+        <input class="text" type="text" id="q" name="q" value="{{ search }}" placeholder="Key">
       </div>
       <button class="btn" type="submit">Filter</button>
-      <a class="btn" href="{{ url('pragmatic-translations') }}">Reset</a>
+      <a class="btn" href="{{ url('pragmatic-translations', { group: group }) }}">Reset</a>
     </form>
 
     <form method="post" enctype="multipart/form-data" accept-charset="UTF-8" style="margin-left: auto;">
@@ -55,17 +44,55 @@
     </form>
   </div>
 
+  <div class="tabs" style="margin-top: 16px;">
+    <ul>
+      {% for groupName in groups %}
+        <li>
+          <a class="{{ groupName == group ? 'sel' : '' }}" href="{{ url('pragmatic-translations', { group: groupName, q: search }) }}">{{ groupName }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="flex" style="margin-top: 12px; gap: 16px; align-items: flex-end;">
+    <form method="post" accept-charset="UTF-8" class="flex" style="gap: 8px; align-items: flex-end;">
+      {{ csrfInput() }}
+      {{ actionInput('pragmatic-translations/translations/add-group') }}
+      {{ redirectInput('pragmatic-translations', { group: group, q: search }) }}
+      <div>
+        <label for="new-group">New group</label>
+        <input class="text" id="new-group" name="name" placeholder="e.g. profesionales">
+      </div>
+      <button class="btn" type="submit">Add</button>
+    </form>
+
+    <form method="post" accept-charset="UTF-8" class="flex" style="gap: 8px; align-items: flex-end;">
+      {{ csrfInput() }}
+      {{ actionInput('pragmatic-translations/translations/delete-group') }}
+      {{ redirectInput('pragmatic-translations', { group: 'site', q: search }) }}
+      <div>
+        <label for="delete-group">Delete group</label>
+        <div class="select">
+          <select id="delete-group" name="name">
+            {% for groupName in groups if groupName != 'site' %}
+              <option value="{{ groupName }}">{{ groupName }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <button class="btn" type="submit">Delete</button>
+    </form>
+  </div>
+
   <form method="post" accept-charset="UTF-8">
     {{ csrfInput() }}
     {{ actionInput('pragmatic-translations/translations/save') }}
-    {{ redirectInput('pragmatic-translations') }}
+    {{ redirectInput('pragmatic-translations', { group: group, q: search }) }}
 
     <table class="data fullwidth" id="translations-table" style="margin-top: 16px;">
       <thead>
         <tr>
           <th>Key</th>
-          <th>Group</th>
-          <th>Description</th>
           {% for language in languages %}
             <th>{{ language }}</th>
           {% endfor %}
@@ -78,12 +105,7 @@
             <td>
               <input type="hidden" name="translations[{{ loop.index0 }}][id]" value="{{ translation.id }}">
               <input class="text fullwidth" name="translations[{{ loop.index0 }}][key]" value="{{ translation.key }}" required>
-            </td>
-            <td>
-              <input class="text fullwidth" name="translations[{{ loop.index0 }}][group]" value="{{ translation.group }}">
-            </td>
-            <td>
-              <input class="text fullwidth" name="translations[{{ loop.index0 }}][description]" value="{{ translation.description }}">
+              <input type="hidden" name="translations[{{ loop.index0 }}][group]" value="{{ group }}">
             </td>
             {% for language in languages %}
               <td>
@@ -109,12 +131,7 @@
         <tr data-new-row="1">
           <td>
             <input class="text fullwidth" name="translations[{{ newIndex }}][key]" placeholder="New key">
-          </td>
-          <td>
-            <input class="text fullwidth" name="translations[{{ newIndex }}][group]" placeholder="Optional group">
-          </td>
-          <td>
-            <input class="text fullwidth" name="translations[{{ newIndex }}][description]" placeholder="Optional description">
+            <input type="hidden" name="translations[{{ newIndex }}][group]" value="{{ group }}">
           </td>
           {% for language in languages %}
             <td>

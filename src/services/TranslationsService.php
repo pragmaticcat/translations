@@ -5,6 +5,7 @@ namespace pragmatic\translations\services;
 use Craft;
 use craft\base\Component;
 use craft\db\Query;
+use pragmatic\translations\records\TranslationGroupRecord;
 use pragmatic\translations\records\TranslationRecord;
 use pragmatic\translations\records\TranslationValueRecord;
 
@@ -12,7 +13,7 @@ class TranslationsService extends Component
 {
     private array $requestCache = [];
 
-    public function t(string $key, array $params = [], ?int $siteId = null, bool $fallbackToPrimary = true, bool $createIfMissing = true): string
+    public function t(string $key, array $params = [], ?int $siteId = null, bool $fallbackToPrimary = true, bool $createIfMissing = true, ?string $group = null): string
     {
         $siteId = $siteId ?? Craft::$app->getSites()->getCurrentSite()->id;
         $value = $this->getValue($key, $siteId);
@@ -25,7 +26,7 @@ class TranslationsService extends Component
         }
 
         if ($value === null && $createIfMissing) {
-            $this->ensureKeyExists($key);
+            $this->ensureKeyExists($key, $group);
         }
 
         if ($value === null) {
@@ -48,7 +49,6 @@ class TranslationsService extends Component
                 't.id',
                 't.key',
                 't.group',
-                't.description',
                 'v.siteId',
                 'v.value',
             ])
@@ -63,7 +63,6 @@ class TranslationsService extends Component
             $query->andWhere([
                 'or',
                 ['like', 't.key', $search],
-                ['like', 't.description', $search],
             ]);
         }
 
@@ -79,7 +78,6 @@ class TranslationsService extends Component
                     'id' => $id,
                     'key' => $row['key'],
                     'group' => $row['group'],
-                    'description' => $row['description'],
                     'values' => [],
                 ];
             }
@@ -121,15 +119,14 @@ class TranslationsService extends Component
 
                 $preserveMeta = !empty($item['preserveMeta']);
                 $hasGroup = array_key_exists('group', $item);
-                $hasDescription = array_key_exists('description', $item);
 
                 if (!$preserveMeta || !$record->id || $hasGroup) {
-                    $record->group = trim((string)($item['group'] ?? '')) ?: null;
+                    $record->group = $this->normalizeGroup($item['group'] ?? null);
                 }
 
-                if (!$preserveMeta || !$record->id || $hasDescription) {
-                    $record->description = trim((string)($item['description'] ?? '')) ?: null;
-                }
+                $this->ensureGroupExists($record->group);
+
+                $record->description = null;
 
                 if (!$record->save()) {
                     throw new \RuntimeException('Failed to save translation key: ' . $key);
@@ -192,7 +189,7 @@ class TranslationsService extends Component
         return $translations;
     }
 
-    public function getValueWithFallback(string $key, ?int $siteId = null, bool $fallbackToPrimary = true, bool $createIfMissing = true): ?string
+    public function getValueWithFallback(string $key, ?int $siteId = null, bool $fallbackToPrimary = true, bool $createIfMissing = true, ?string $group = null): ?string
     {
         $siteId = $siteId ?? Craft::$app->getSites()->getCurrentSite()->id;
         $value = $this->getValue($key, $siteId);
@@ -205,26 +202,31 @@ class TranslationsService extends Component
         }
 
         if ($value === null && $createIfMissing) {
-            $this->ensureKeyExists($key);
+            $this->ensureKeyExists($key, $group);
         }
 
         return $value;
     }
 
-    public function ensureKeyExists(string $key): void
+    public function ensureKeyExists(string $key, ?string $group = null): void
     {
         $key = trim($key);
         if ($key === '') {
             return;
         }
 
-        if (TranslationRecord::find()->where(['key' => $key])->exists()) {
+        $record = TranslationRecord::find()->where(['key' => $key])->one();
+        if ($record) {
+            if ($record->group === null || $record->group === '') {
+                $record->group = $this->normalizeGroup($group);
+                $record->save(false);
+            }
             return;
         }
 
         $record = new TranslationRecord();
         $record->key = $key;
-        $record->group = null;
+        $record->group = $this->normalizeGroup($group);
         $record->description = null;
 
         try {
@@ -237,14 +239,49 @@ class TranslationsService extends Component
     public function getGroups(): array
     {
         $groups = (new Query())
-            ->select(['t.group'])
-            ->distinct()
-            ->from(['t' => TranslationRecord::tableName()])
-            ->where(['not', ['t.group' => null]])
-            ->orderBy(['t.group' => SORT_ASC])
+            ->select(['g.name'])
+            ->from(['g' => TranslationGroupRecord::tableName()])
+            ->orderBy(['g.name' => SORT_ASC])
             ->column();
 
-        return array_values(array_filter($groups, static fn($group) => $group !== ''));
+        if (!in_array('site', $groups, true)) {
+            $groups[] = 'site';
+        }
+
+        sort($groups);
+        return $groups;
+    }
+
+    public function addGroup(string $name): void
+    {
+        $this->ensureGroupExists($name);
+    }
+
+    public function deleteGroup(string $name): void
+    {
+        $name = $this->normalizeGroup($name);
+        if ($name === 'site') {
+            return;
+        }
+
+        TranslationGroupRecord::deleteAll(['name' => $name]);
+        TranslationRecord::updateAll(['group' => 'site'], ['group' => $name]);
+    }
+
+    public function ensureGroupExists(?string $name): string
+    {
+        $name = $this->normalizeGroup($name);
+        if ($name === 'site') {
+            return $name;
+        }
+
+        if (!TranslationGroupRecord::find()->where(['name' => $name])->exists()) {
+            $record = new TranslationGroupRecord();
+            $record->name = $name;
+            $record->save(false);
+        }
+
+        return $name;
     }
 
     public function deleteTranslationById(int $id): void
@@ -273,5 +310,15 @@ class TranslationsService extends Component
         $this->requestCache[$cacheKey] = $value;
 
         return $value;
+    }
+
+    private function normalizeGroup($group): string
+    {
+        $group = trim((string)$group);
+        if ($group === '') {
+            return 'site';
+        }
+
+        return $group;
     }
 }

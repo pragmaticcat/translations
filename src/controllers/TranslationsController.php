@@ -31,7 +31,7 @@ class TranslationsController extends Controller
         $languages = $this->getLanguages($sites);
         $request = Craft::$app->getRequest();
         $search = (string)$request->getParam('q', '');
-        $group = (string)$request->getParam('group', '');
+        $group = (string)$request->getParam('group', 'site');
 
         $translations = PragmaticTranslations::$plugin->translations->getAllTranslations($search, $group);
         $groups = PragmaticTranslations::$plugin->translations->getGroups();
@@ -82,7 +82,6 @@ class TranslationsController extends Controller
             foreach ($translations as $translation) {
                 $item = [
                     'group' => $translation['group'],
-                    'description' => $translation['description'],
                     'translations' => [],
                 ];
                 foreach ($languages as $language) {
@@ -103,7 +102,7 @@ class TranslationsController extends Controller
             throw new \RuntimeException('Unable to create CSV export.');
         }
 
-        $header = ['key', 'group', 'description'];
+        $header = ['key', 'group'];
         foreach ($languages as $language) {
             $header[] = $language;
         }
@@ -113,7 +112,6 @@ class TranslationsController extends Controller
             $row = [
                 $translation['key'],
                 $translation['group'],
-                $translation['description'],
             ];
             foreach ($languages as $language) {
                 $row[] = $this->getValueForLanguage($translation, $sites, $language);
@@ -159,8 +157,7 @@ class TranslationsController extends Controller
                 }
                 $items[] = [
                     'key' => (string)$key,
-                    'group' => $item['group'] ?? null,
-                    'description' => $item['description'] ?? null,
+                    'group' => $item['group'] ?? 'site',
                     'values' => $values,
                 ];
             }
@@ -206,7 +203,7 @@ class TranslationsController extends Controller
             $columnMap = [];
             foreach ($header as $index => $column) {
                 $column = trim((string)$column);
-                if ($column === 'key' || $column === 'group' || $column === 'description') {
+                if ($column === 'key' || $column === 'group') {
                     $columnMap[$column] = $index;
                     continue;
                 }
@@ -221,7 +218,7 @@ class TranslationsController extends Controller
 
                 $values = [];
                 foreach ($columnMap as $column => $index) {
-                    if ($column === 'key' || $column === 'group' || $column === 'description') {
+                    if ($column === 'key' || $column === 'group') {
                         continue;
                     }
                     $values[$column] = (string)($row[$index] ?? '');
@@ -229,8 +226,7 @@ class TranslationsController extends Controller
 
                 $items[] = [
                     'key' => $key,
-                    'group' => trim((string)($row[$columnMap['group']] ?? '')) ?: null,
-                    'description' => trim((string)($row[$columnMap['description']] ?? '')) ?: null,
+                    'group' => trim((string)($row[$columnMap['group']] ?? '')) ?: 'site',
                     'values' => $values,
                 ];
             }
@@ -265,6 +261,26 @@ class TranslationsController extends Controller
         return Craft::$app->getResponse()->sendFile($zipPath, 'translations-php.zip', [
             'mimeType' => 'application/zip',
         ]);
+    }
+
+    public function actionAddGroup(): Response
+    {
+        $this->requirePostRequest();
+        $name = (string)Craft::$app->getRequest()->getBodyParam('name', '');
+        PragmaticTranslations::$plugin->translations->addGroup($name);
+        Craft::$app->getSession()->setNotice('Group added.');
+
+        return $this->redirectToPostedUrl();
+    }
+
+    public function actionDeleteGroup(): Response
+    {
+        $this->requirePostRequest();
+        $name = (string)Craft::$app->getRequest()->getBodyParam('name', '');
+        PragmaticTranslations::$plugin->translations->deleteGroup($name);
+        Craft::$app->getSession()->setNotice('Group deleted.');
+
+        return $this->redirectToPostedUrl();
     }
 
     private function getLanguages(array $sites): array

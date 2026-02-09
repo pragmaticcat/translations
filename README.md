@@ -4,7 +4,7 @@ Craft CMS 5 plugin to manage static translations stored in the database, with a 
 
 ## Features
 - CP section with two-level navigation: `Pragmatic > Translations`
-- Manage translation keys, groups, and descriptions
+- Manage translation keys and groups (default group: `site`)
 - Per-site translation values (Craft multisite)
 - Search and filter by group
 - Bulk editing and delete from the grid
@@ -29,6 +29,8 @@ Craft CMS 5 plugin to manage static translations stored in the database, with a 
 {{ craft.pragmaticTranslations.t('hero.title') }}
 {{ craft.pragmaticTranslations.t('hero.greeting', { name: 'Oriol' }) }}
 {{ 'hero.title'|t }}
+{{ 'hero.title'|t('site') }}
+{{ 'hero.title'|t('profesionales') }}
 ```
 
 ### CP
@@ -40,7 +42,7 @@ Craft CMS 5 plugin to manage static translations stored in the database, with a 
 ### CSV
 Header:
 ```
-key,group,description,<siteHandle1>,<siteHandle2>,...
+key,group,<language1>,<language2>,...
 ```
 
 ### JSON
@@ -48,10 +50,9 @@ key,group,description,<siteHandle1>,<siteHandle2>,...
 {
   "hero.title": {
     "group": "home",
-    "description": "Homepage hero title",
     "translations": {
-      "default": "Welcome",
-      "es": "Bienvenido"
+      "en-US": "Welcome",
+      "es-ES": "Bienvenido"
     }
   }
 }
