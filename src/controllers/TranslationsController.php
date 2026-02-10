@@ -115,11 +115,41 @@ class TranslationsController extends Controller
             $perPage = 50;
         }
 
+        $settings = PragmaticTranslations::$plugin->getSettings();
+        $apiKey = \craft\helpers\App::env($settings->googleApiKeyEnv);
+        $autotranslateAvailable = true;
+        $autotranslateDisabledReason = '';
+        if (trim($settings->googleProjectId) === '') {
+            $autotranslateAvailable = false;
+            $autotranslateDisabledReason = 'Google Translate project ID is missing.';
+        } elseif (empty($apiKey)) {
+            $autotranslateAvailable = false;
+            $autotranslateDisabledReason = 'Google Translate API key is missing.';
+        }
+
         return $this->renderTemplate('pragmatic-translations/options', [
             'search' => $search,
             'group' => $group,
             'perPage' => $perPage,
+            'settings' => $settings,
+            'autotranslateAvailable' => $autotranslateAvailable,
+            'autotranslateDisabledReason' => $autotranslateDisabledReason,
         ]);
+    }
+
+    public function actionSaveOptions(): Response
+    {
+        $this->requirePostRequest();
+
+        $settings = Craft::$app->getRequest()->getBodyParam('settings', []);
+        if (!is_array($settings)) {
+            throw new BadRequestHttpException('Invalid settings payload.');
+        }
+
+        Craft::$app->getPlugins()->savePluginSettings(PragmaticTranslations::$plugin, $settings);
+        Craft::$app->getSession()->setNotice('Options saved.');
+
+        return $this->redirectToPostedUrl();
     }
 
     public function actionSave(): Response

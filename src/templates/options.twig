@@ -8,7 +8,29 @@
     { label: "Opciones"|t('pragmatic-translations'), url: url('pragmatic-translations/options') },
 ] %}
 
+{% import "_includes/forms" as forms %}
+
 {% block content %}
 
-  <p class="light" style="margin-top: 12px;">No options available yet.</p>
+  <form method="post" accept-charset="UTF-8" style="margin-top: 12px;">
+    {{ csrfInput() }}
+    {{ actionInput('pragmatic-translations/translations/save-options') }}
+    {{ redirectInput('pragmatic-translations/options') }}
+
+    {% if not autotranslateAvailable %}
+      <p class="warning">{{ autotranslateDisabledReason }}</p>
+    {% endif %}
+
+    {{ forms.lightswitchField({
+      label: "Autotraducir campos"|t('pragmatic-translations'),
+      instructions: "Habilita o deshabilita la opción de traducir campos desde otro sitio."|t('pragmatic-translations'),
+      name: 'settings[enableAutotranslate]',
+      on: settings.enableAutotranslate,
+      disabled: not autotranslateAvailable
+    }) }}
+
+    <div class="buttons">
+      <button class="btn submit" type="submit">Save</button>
+    </div>
+  </form>
 {% endblock %}

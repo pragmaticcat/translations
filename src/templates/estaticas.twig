@@ -12,37 +12,45 @@
 {% block content %}
 
   <div class="flex" style="margin-top: 12px; gap: 16px; align-items: flex-end;">
-    <form method="get" id="entries-filter" class="flex" style="gap: 12px; align-items: flex-end;">
-      <input type="hidden" name="page" value="1">
+    <div class="flex justify-between align-center">
       <div>
-        <label for="q">Search</label>
-        <input class="text" type="text" id="q" name="q" value="{{ search }}" placeholder="Key">
-      </div>
-      {% if groups|length > 1 %}
-        <div>
-          <label for="group">Group</label>
-          <div class="select">
-            <select id="group" name="group">
-              {% for groupName in groups %}
-                <option value="{{ groupName }}" {{ groupName == group ? 'selected' : '' }}>{{ groupName }}</option>
-              {% endfor %}
-            </select>
+        <form method="get" id="entries-filter" class="flex" style="gap: 12px; align-items: flex-end;">
+          <input type="hidden" name="page" value="1">
+          <div>
+            <label for="q">Search</label>
+            <input class="text" type="text" id="q" name="q" value="{{ search }}" placeholder="Key">
           </div>
-        </div>
-      {% else %}
-        <input type="hidden" name="group" value="{{ group }}">
-      {% endif %}
-      <div>
-        <label for="perPage">Per page</label>
-        <div class="select">
-          <select id="perPage" name="perPage">
-            {% for option in [50, 100, 250] %}
-              <option value="{{ option }}" {{ option == perPage ? 'selected' : '' }}>{{ option }}</option>
-            {% endfor %}
-          </select>
-        </div>
+          {% if groups|length > 1 %}
+            <div>
+              <label for="group">Group</label>
+              <div class="select">
+                <select id="group" name="group">
+                  {% for groupName in groups %}
+                    <option value="{{ groupName }}" {{ groupName == group ? 'selected' : '' }}>{{ groupName }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          {% else %}
+            <input type="hidden" name="group" value="{{ group }}">
+          {% endif %}
+          <div>
+            <label for="perPage">Per page</label>
+            <div class="select">
+              <select id="perPage" name="perPage">
+                {% for option in [50, 100, 250] %}
+                  <option value="{{ option }}" {{ option == perPage ? 'selected' : '' }}>{{ option }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </form>
       </div>
-    </form>
+      <div class="buttons">
+        <button class="btn" id="add-row" type="button">Add Row</button>
+        <button class="btn submit" type="submit">Save</button>
+      </div>
+    </div>
   </div>
 
   <form method="post" accept-charset="UTF-8">
@@ -50,13 +58,7 @@
     {{ actionInput('pragmatic-translations/translations/save') }}
     {{ redirectInput('pragmatic-translations/entries', { group: group, q: search, perPage: perPage, page: page }) }}
 
-    <div class="flex justify-between align-center" style="margin-top: 16px;">
-      <div></div>
-      <div class="buttons">
-        <button class="btn" id="add-row" type="button">Add Row</button>
-        <button class="btn submit" type="submit">Save</button>
-      </div>
-    </div>
+    
 
     <table class="data fullwidth" id="translations-table" style="margin-top: 16px;">
       <thead>

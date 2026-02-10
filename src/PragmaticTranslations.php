@@ -56,6 +56,7 @@ class PragmaticTranslations extends Plugin
                 $event->rules['pragmatic-translations/import'] = 'pragmatic-translations/translations/import';
                 $event->rules['pragmatic-translations/groups/save'] = 'pragmatic-translations/translations/save-groups';
                 $event->rules['pragmatic-translations/autotranslate'] = 'pragmatic-translations/translations/autotranslate';
+                $event->rules['pragmatic-translations/options/save'] = 'pragmatic-translations/translations/save-options';
             }
         );
 
@@ -102,6 +103,8 @@ class PragmaticTranslations extends Plugin
             $settings = $this->getSettings();
             $apiKey = \craft\helpers\App::env($settings->googleApiKeyEnv);
             $googleConfigured = trim($settings->googleProjectId) !== '' && !empty($apiKey);
+            $autotranslateEnabled = (bool)$settings->enableAutotranslate;
+            $autotranslateReady = $googleConfigured && $autotranslateEnabled;
 
             // Register config at POS_HEAD so it's available before asset bundle JS runs
             $view->registerJs('window.PragmaticTranslations = ' . json_encode([
@@ -112,10 +115,12 @@ class PragmaticTranslations extends Plugin
                 'readmeUrl' => $this->getReadmeUrl(),
             ]) . ';', View::POS_HEAD);
 
-            $view->registerAssetBundle(AutotranslateAsset::class);
+            if ($autotranslateReady) {
+                $view->registerAssetBundle(AutotranslateAsset::class);
+            }
 
             // Add "Translate from site…" to field action menus (Craft 5.9+)
-            if (class_exists(\craft\events\DefineFieldActionsEvent::class)) {
+            if ($autotranslateReady && class_exists(\craft\events\DefineFieldActionsEvent::class)) {
                 Event::on(
                     CustomField::class,
                     BaseField::EVENT_DEFINE_ACTION_MENU_ITEMS,

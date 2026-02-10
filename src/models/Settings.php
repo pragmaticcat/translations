@@ -10,12 +10,14 @@ class Settings extends Model
     public string $googleLocation = 'global';
     public string $googleApiKeyEnv = 'GOOGLE_TRANSLATE_API_KEY';
     public array $languageMap = [];
+    public bool $enableAutotranslate = true;
 
     public function rules(): array
     {
         return [
             [['googleProjectId', 'googleLocation', 'googleApiKeyEnv'], 'string'],
             ['languageMap', 'safe'],
+            ['enableAutotranslate', 'boolean'],
         ];
     }
 }
