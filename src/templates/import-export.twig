@@ -1,16 +1,15 @@
 {% extends "pragmatic-translations/_layout" %}
 
-{% set title = "Importar/exportar" %}
+{% set title = "Importar/exportar"|t('pragmatic-translations') %}
+
+{% set selectedTab = 'import-export' %}
 
 {% set crumbs = [
     { label: "Translations"|t('pragmatic-translations'), url: url('pragmatic-translations') },
     { label: "Importar/exportar"|t('pragmatic-translations'), url: url('pragmatic-translations/import-export') },
 ] %}
 
-{% block main %}
-  <div class="flex justify-between align-center">
-    <h1>Importar/exportar</h1>
-  </div>
+{% block content %}
 
   <div class="flex" style="margin-top: 12px; gap: 16px; align-items: flex-end;">
     <div class="btngroup">

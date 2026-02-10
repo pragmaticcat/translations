@@ -1,16 +1,15 @@
 {% extends "pragmatic-translations/_layout" %}
 
-{% set title = "Grupos" %}
+{% set title = "Grupos"|t('pragmatic-translations') %}
+
+{% set selectedTab = 'groups' %}
 
 {% set crumbs = [
     { label: "Translations"|t('pragmatic-translations'), url: url('pragmatic-translations') },
     { label: "Grupos"|t('pragmatic-translations'), url: url('pragmatic-translations/groups') },
 ] %}
 
-{% block main %}
-  <div class="flex justify-between align-center">
-    <h1>Grupos</h1>
-  </div>
+{% block content %}
 
   <form method="post" accept-charset="UTF-8" style="margin-top: 12px;">
     {{ csrfInput() }}

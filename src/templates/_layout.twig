@@ -1,4 +1,4 @@
-{% extends "_layouts/cp" %}
+{% extends parentLayout|default('_layouts/cp') %}
 
 {% set title = title ?? "Translations" %}
 {% set selectedSubnavItem = "translations" %}
@@ -12,5 +12,4 @@
 } %}
 
 {% block content %}
-    {% block main %}{% endblock %}
 {% endblock %}

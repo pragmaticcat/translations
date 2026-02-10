@@ -1,16 +1,15 @@
 {% extends "pragmatic-translations/_layout" %}
 
-{% set title = "Entradas" %}
+{% set title = "Entradas"|t('pragmatic-translations') %}
+
+{% set selectedTab = 'entries' %}
 
 {% set crumbs = [
     { label: "Translations"|t('pragmatic-translations'), url: url('pragmatic-translations') },
     { label: "Entradas"|t('pragmatic-translations'), url: url('pragmatic-translations/entries') },
 ] %}
 
-{% block main %}
-  <div class="flex justify-between align-center">
-    <h1>Entradas</h1>
-  </div>
+{% block content %}
 
   <div class="flex" style="gap: 12px; margin-top: 8px; flex-wrap: wrap;">
     <div class="hud-stat">
