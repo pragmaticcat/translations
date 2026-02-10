@@ -79,7 +79,7 @@
             {% if isFirstOfGroup %}
               <td rowspan="{{ entryRowCounts[entryId] }}" style="vertical-align: top;">
                 <a href="#" class="js-entry-slideout" data-entry-id="{{ entryId }}">{{ row.entry.title|default('Entry #' ~ entryId) }}</a>
-                <div class="light">{{ row.entry.section.name ?? 'No section' }}</div>
+                <div class="light">{{ row.entry.section.name ?? row.entry.type.name ?? 'No section or type' }}</div>
               </td>
             {% endif %}
             <td>
