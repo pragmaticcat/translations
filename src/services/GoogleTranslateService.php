@@ -49,6 +49,48 @@ class GoogleTranslateService extends Component
         return $translation;
     }
 
+    public function translateBatch(array $texts, string $sourceLang, string $targetLang, string $mimeType): array
+    {
+        $settings = PragmaticTranslations::$plugin->getSettings();
+        $projectId = trim($settings->googleProjectId);
+        $location = trim($settings->googleLocation ?: 'global');
+        $apiKey = App::env($settings->googleApiKeyEnv);
+
+        if ($projectId === '') {
+            throw new \RuntimeException('Google Translate project ID is not configured.');
+        }
+        if (!$apiKey) {
+            throw new \RuntimeException('Google Translate API key is not configured.');
+        }
+
+        $url = sprintf(
+            'https://translation.googleapis.com/language/translate/v3/projects/%s/locations/%s:translateText',
+            urlencode($projectId),
+            urlencode($location)
+        );
+
+        $client = Craft::createGuzzleClient();
+        $response = $client->post($url, [
+            'query' => ['key' => $apiKey],
+            'json' => [
+                'contents' => $texts,
+                'mimeType' => $mimeType,
+                'sourceLanguageCode' => $sourceLang,
+                'targetLanguageCode' => $targetLang,
+            ],
+        ]);
+
+        $payload = json_decode((string)$response->getBody(), true);
+        $translations = $payload['translations'] ?? [];
+
+        $results = [];
+        foreach ($translations as $t) {
+            $results[] = $t['translatedText'] ?? '';
+        }
+
+        return $results;
+    }
+
     public function resolveLanguageCode(string $siteLanguage): string
     {
         $settings = PragmaticTranslations::$plugin->getSettings();

@@ -208,6 +208,10 @@ class TranslationsController extends Controller
         $sections = Craft::$app->entries->getAllSections();
         $fieldOptions = $this->getEntryFieldOptions();
 
+        $settings = PragmaticTranslations::$plugin->getSettings();
+        $apiKey = \craft\helpers\App::env($settings->googleApiKeyEnv);
+        $autotranslateAvailable = trim($settings->googleProjectId) !== '' && !empty($apiKey);
+
         return $this->renderTemplate('pragmatic-translations/entradas', [
             'rows' => $pageRows,
             'entryRowCounts' => $entryRowCounts,
@@ -222,6 +226,8 @@ class TranslationsController extends Controller
             'totalPages' => $totalPages,
             'total' => $total,
             'fieldOptions' => $fieldOptions,
+            'autotranslateAvailable' => $autotranslateAvailable,
+            'autotranslateTextUrl' => \craft\helpers\UrlHelper::actionUrl('pragmatic-translations/translations/autotranslate-text'),
         ]);
     }
 
@@ -572,6 +578,56 @@ class TranslationsController extends Controller
         }
 
         return $this->asJson(['success' => true, 'text' => $translated]);
+    }
+
+    public function actionAutotranslateText(): Response
+    {
+        $this->requirePostRequest();
+        $this->requireAcceptsJson();
+
+        $request = Craft::$app->getRequest();
+        $texts = $request->getBodyParam('texts');
+        $sourceLang = (string)$request->getBodyParam('sourceLang', '');
+        $targetLang = (string)$request->getBodyParam('targetLang', '');
+        $mimeType = (string)$request->getBodyParam('mimeType', 'text/plain');
+
+        if (!is_array($texts) || $sourceLang === '' || $targetLang === '') {
+            return $this->asJson(['success' => false, 'error' => 'Missing required parameters.']);
+        }
+
+        if ($sourceLang === $targetLang) {
+            return $this->asJson(['success' => true, 'translations' => $texts]);
+        }
+
+        // Filter out empty texts, preserving indices
+        $toTranslate = [];
+        $indexMap = [];
+        foreach ($texts as $i => $text) {
+            if (trim((string)$text) !== '') {
+                $indexMap[] = $i;
+                $toTranslate[] = (string)$text;
+            }
+        }
+
+        if (empty($toTranslate)) {
+            return $this->asJson(['success' => true, 'translations' => $texts]);
+        }
+
+        $translate = PragmaticTranslations::$plugin->googleTranslate;
+
+        try {
+            $translated = $translate->translateBatch($toTranslate, $sourceLang, $targetLang, $mimeType);
+        } catch (\Throwable $e) {
+            return $this->asJson(['success' => false, 'error' => $e->getMessage()]);
+        }
+
+        // Rebuild full array with translations in place of non-empty texts
+        $results = $texts;
+        foreach ($indexMap as $j => $originalIndex) {
+            $results[$originalIndex] = $translated[$j] ?? $texts[$originalIndex];
+        }
+
+        return $this->asJson(['success' => true, 'translations' => array_values($results)]);
     }
 
     private function exportPhp(array $sites, $service): Response
