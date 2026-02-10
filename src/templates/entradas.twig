@@ -82,19 +82,7 @@
             </td>
             {% for language in languages %}
               <td>
-                {% set value = '' %}
-                {% for siteId in languageMap[language] %}
-                  {% set entryForSite = craft.entries.id(row.entry.id).siteId(siteId).one() %}
-                  {% if entryForSite %}
-                    {% if row.fieldHandle == 'title' %}
-                      {% set value = entryForSite.title %}
-                    {% else %}
-                      {% set value = entryForSite.getFieldValue(row.fieldHandle)|string %}
-                    {% endif %}
-                    {% break %}
-                  {% endif %}
-                {% endfor %}
-                <input class="text fullwidth" name="entries[{{ rowIndex }}][values][{{ language }}]" value="{{ value }}">
+                <input class="text fullwidth" name="entries[{{ rowIndex }}][values][{{ language }}]" value="{{ row.values[language] ?? '' }}">
               </td>
             {% endfor %}
             <td>
@@ -111,9 +99,17 @@
     <div class="flex" style="gap: 8px; align-items: center;">
       {% set prevPage = page > 1 ? page - 1 : 1 %}
       {% set nextPage = page < totalPages ? page + 1 : totalPages %}
-      <a class="btn {{ page == 1 ? 'disabled' : '' }}" href="{{ url('pragmatic-translations/groups', { q: search, perPage: perPage, page: prevPage, section: sectionId, field: fieldFilter }) }}">Prev</a>
+      {% if page == 1 %}
+        <span class="btn disabled">Prev</span>
+      {% else %}
+        <a class="btn" href="{{ url('pragmatic-translations/groups', { q: search, perPage: perPage, page: prevPage, section: sectionId, field: fieldFilter }) }}">Prev</a>
+      {% endif %}
       <div>Page {{ page }} / {{ totalPages }}</div>
-      <a class="btn {{ page == totalPages ? 'disabled' : '' }}" href="{{ url('pragmatic-translations/groups', { q: search, perPage: perPage, page: nextPage, section: sectionId, field: fieldFilter }) }}">Next</a>
+      {% if page == totalPages %}
+        <span class="btn disabled">Next</span>
+      {% else %}
+        <a class="btn" href="{{ url('pragmatic-translations/groups', { q: search, perPage: perPage, page: nextPage, section: sectionId, field: fieldFilter }) }}">Next</a>
+      {% endif %}
     </div>
   </div>
 
@@ -126,34 +122,22 @@
       const perPageSelect = document.getElementById('perPage');
 
       if (filterForm) {
+        const pageInput = filterForm.querySelector('input[name="page"]');
+        function resetPageAndSubmit() {
+          if (pageInput) pageInput.value = '1';
+          filterForm.submit();
+        }
+
         let searchTimer = null;
         if (searchInput) {
           searchInput.addEventListener('input', function() {
-            if (searchTimer) {
-              clearTimeout(searchTimer);
-            }
-            searchTimer = setTimeout(function() {
-              filterForm.submit();
-            }, 300);
+            if (searchTimer) clearTimeout(searchTimer);
+            searchTimer = setTimeout(resetPageAndSubmit, 300);
           });
         }
-        if (sectionSelect) {
-          sectionSelect.addEventListener('change', function() {
-            filterForm.submit();
-          });
-        }
-        if (fieldSelect) {
-          fieldSelect.addEventListener('change', function() {
-            filterForm.submit();
-          });
-        }
-        if (perPageSelect) {
-          perPageSelect.addEventListener('change', function() {
-            const pageInput = filterForm.querySelector('input[name="page"]');
-            if (pageInput) pageInput.value = '1';
-            filterForm.submit();
-          });
-        }
+        [sectionSelect, fieldSelect, perPageSelect].forEach(function(el) {
+          if (el) el.addEventListener('change', resetPageAndSubmit);
+        });
       }
 
       document.querySelectorAll('.js-entry-slideout').forEach(function(link) {

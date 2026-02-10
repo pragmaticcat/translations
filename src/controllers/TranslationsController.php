@@ -161,6 +161,44 @@ class TranslationsController extends Controller
         $offset = ($page - 1) * $perPage;
         $pageRows = array_slice($rows, $offset, $perPage);
 
+        // Pre-load entry data for all sites to avoid N+1 queries in the template
+        $entryIds = array_unique(array_map(fn($r) => $r['entry']->id, $pageRows));
+        $siteEntries = [];
+        if (!empty($entryIds)) {
+            $allSiteIds = [];
+            foreach ($languageMap as $siteIds) {
+                foreach ($siteIds as $siteId) {
+                    $allSiteIds[$siteId] = true;
+                }
+            }
+            foreach (array_keys($allSiteIds) as $siteId) {
+                $entries = Entry::find()->id($entryIds)->siteId($siteId)->status(null)->all();
+                foreach ($entries as $e) {
+                    $siteEntries[$siteId][$e->id] = $e;
+                }
+            }
+        }
+
+        foreach ($pageRows as &$row) {
+            $row['values'] = [];
+            foreach ($languageMap as $lang => $siteIds) {
+                $value = '';
+                foreach ($siteIds as $siteId) {
+                    if (isset($siteEntries[$siteId][$row['entry']->id])) {
+                        $entry = $siteEntries[$siteId][$row['entry']->id];
+                        if ($row['fieldHandle'] === 'title') {
+                            $value = (string)$entry->title;
+                        } else {
+                            $value = (string)$entry->getFieldValue($row['fieldHandle']);
+                        }
+                        break;
+                    }
+                }
+                $row['values'][$lang] = $value;
+            }
+        }
+        unset($row);
+
         $sections = Craft::$app->entries->getAllSections();
         $fieldOptions = $this->getEntryFieldOptions();
 
