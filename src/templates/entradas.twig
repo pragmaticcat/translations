@@ -91,13 +91,6 @@
               <td rowspan="{{ entryRowCounts[entryId] }}" style="vertical-align: top;">
                 <a href="#" class="js-entry-slideout" data-entry-id="{{ entryId }}">{{ row.entry.title|default('Entry #' ~ entryId) }}</a>
                 <div class="light">{{ row.entry.section.name ?? row.entry.type.name ?? 'No section or type' }}</div>
-                {% if autotranslateAvailable %}
-                  <div style="margin-top: 6px;">
-                    <label class="light" style="font-size: 12px; cursor: pointer;">
-                      <input type="checkbox" class="js-at-entry-check" data-entry-id="{{ entryId }}"> Select all
-                    </label>
-                  </div>
-                {% endif %}
               </td>
             {% endif %}
             <td>
@@ -118,9 +111,6 @@
             {% endfor %}
             <td style="white-space: nowrap;">
               <button class="btn submit" type="submit" name="saveRow" value="{{ rowIndex }}">Save</button>
-              {% if autotranslateAvailable %}
-                <input type="checkbox" class="js-at-row-check" data-row-index="{{ rowIndex }}" title="Select row" style="margin-left: 4px;">
-              {% endif %}
             </td>
           </tr>
         {% endfor %}
@@ -226,18 +216,6 @@
         }
       });
 
-      // Row checkbox → toggle all cells in that row
-      document.querySelectorAll('.js-at-row-check').forEach(function(cb) {
-        cb.addEventListener('change', function() {
-          var rowIndex = cb.getAttribute('data-row-index');
-          var checked = cb.checked;
-          document.querySelectorAll('.js-at-cell-check[data-row-index="' + rowIndex + '"]').forEach(function(cell) {
-            cell.checked = checked;
-          });
-          updateTranslateBtn();
-        });
-      });
-
       // Column checkbox → toggle all cells in that column
       document.querySelectorAll('.js-at-col-check').forEach(function(cb) {
         cb.addEventListener('change', function() {
@@ -245,22 +223,6 @@
           var checked = cb.checked;
           document.querySelectorAll('.js-at-cell-check[data-language="' + language + '"]').forEach(function(cell) {
             cell.checked = checked;
-          });
-          updateTranslateBtn();
-        });
-      });
-
-      // Entry checkbox → toggle all cells for that entry
-      document.querySelectorAll('.js-at-entry-check').forEach(function(cb) {
-        cb.addEventListener('change', function() {
-          var entryId = cb.getAttribute('data-entry-id');
-          var checked = cb.checked;
-          document.querySelectorAll('tr[data-entry-id="' + entryId + '"]').forEach(function(tr) {
-            tr.querySelectorAll('.js-at-cell-check').forEach(function(cell) {
-              cell.checked = checked;
-            });
-            var rowCheck = tr.querySelector('.js-at-row-check');
-            if (rowCheck) rowCheck.checked = checked;
           });
           updateTranslateBtn();
         });
@@ -363,7 +325,7 @@
               Craft.cp.displayNotice('Translated.');
               // Uncheck all after successful translation
               getCellChecks().forEach(function(cb) { cb.checked = false; });
-              document.querySelectorAll('.js-at-row-check, .js-at-col-check, .js-at-entry-check').forEach(function(cb) { cb.checked = false; });
+              document.querySelectorAll('.js-at-col-check').forEach(function(cb) { cb.checked = false; });
               updateTranslateBtn();
             })
             .catch(function(err) {
