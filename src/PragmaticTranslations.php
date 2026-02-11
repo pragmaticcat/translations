@@ -63,6 +63,19 @@ class PragmaticTranslations extends Plugin
         );
 
         Event::on(
+            Cp::class,
+            Cp::EVENT_REGISTER_CP_NAV_ITEMS,
+            function(RegisterCpNavItemsEvent $event) {
+                $event->navItems[] = [
+                    'label' => 'Translations',
+                    'url' => 'pragmatic-translations',
+                    'icon' => '@pragmatic/translations/icon.svg',
+                    'navLabel' => 'Pragmatic',
+                ];
+            }
+        );
+        
+        Event::on(
             UserPermissions::class,
             UserPermissions::EVENT_REGISTER_PERMISSIONS,
             function (RegisterUserPermissionsEvent $event) {
@@ -260,18 +273,4 @@ JS,
         return '';
     }
 
-    public function getCpNavItem(): array
-    {
-        $item = parent::getCpNavItem();
-        $item['label'] = 'Translations';
-        $item['navLabel'] = 'Pragmatic';
-        $item['subnav'] = [
-            'translations' => [
-                'label' => 'Translations',
-                'url' => 'pragmatic-translations',
-            ],
-        ];
-
-        return $item;
-    }
 }
