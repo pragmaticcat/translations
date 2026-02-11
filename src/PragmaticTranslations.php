@@ -64,19 +64,36 @@ class PragmaticTranslations extends Plugin
             }
         );
 
+        // Register nav item under shared "Pragmatic" group
         Event::on(
             Cp::class,
             Cp::EVENT_REGISTER_CP_NAV_ITEMS,
             function(RegisterCpNavItemsEvent $event) {
-                $event->navItems[] = [
+                $groupKey = null;
+                foreach ($event->navItems as $key => $item) {
+                    if (($item['label'] ?? '') === 'Pragmatic' && isset($item['subnav'])) {
+                        $groupKey = $key;
+                        break;
+                    }
+                }
+
+                if ($groupKey === null) {
+                    $event->navItems[] = [
+                        'label' => 'Pragmatic',
+                        'url' => 'pragmatic-translations',
+                        'icon' => __DIR__ . '/icons/gift.svg',
+                        'subnav' => [],
+                    ];
+                    $groupKey = array_key_last($event->navItems);
+                }
+
+                $event->navItems[$groupKey]['subnav']['translations'] = [
                     'label' => 'Translations',
                     'url' => 'pragmatic-translations',
-                    'icon' => '@pragmatic/translations/icon.svg',
-                    'navLabel' => 'Pragmatic',
                 ];
             }
         );
-        
+
         Event::on(
             UserPermissions::class,
             UserPermissions::EVENT_REGISTER_PERMISSIONS,
@@ -254,6 +271,11 @@ JS,
                 );
             }
         }
+    }
+
+    public function getCpNavItem(): ?array
+    {
+        return null;
     }
 
     protected function createSettingsModel(): ?\craft\base\Model
