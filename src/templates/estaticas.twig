@@ -13,6 +13,17 @@
 
   <div class="flex flex-row align-center" style="margin-top: 12px; gap: 16px; justify-content: space-between; width:100%;">
       <div class="flex align-center">
+        <div class="buttons" style="margin-block:0;">
+          <form method="post" accept-charset="UTF-8" style="display:inline-block;">
+            {{ csrfInput() }}
+            {{ actionInput('pragmatic-translations/translations/scan-templates') }}
+            {{ redirectInput('pragmatic-translations/static', { group: group, q: search, perPage: perPage, page: page, site: selectedSite.handle }) }}
+            <input type="hidden" name="group" value="{{ group }}">
+            <button class="btn" type="submit" title="{{ 'Scan templates for translations'|t('pragmatic-translations') }}" aria-label="{{ 'Scan templates for translations'|t('pragmatic-translations') }}">
+              <span class="icon" data-icon="refresh" aria-hidden="true"></span>
+            </button>
+          </form>
+        </div>
         <form method="get" id="entries-filter" class="flex" style="gap: 12px; align-items: flex-end;">
           <input type="hidden" name="page" value="1">
           <input type="hidden" name="site" value="{{ selectedSite.handle }}">
@@ -46,15 +57,6 @@
           </div>
         </form>
         <div class="buttons" style="margin-block:0;">
-          <form method="post" accept-charset="UTF-8" style="display:inline-block;">
-            {{ csrfInput() }}
-            {{ actionInput('pragmatic-translations/translations/scan-templates') }}
-            {{ redirectInput('pragmatic-translations/static', { group: group, q: search, perPage: perPage, page: page, site: selectedSite.handle }) }}
-            <input type="hidden" name="group" value="{{ group }}">
-            <button class="btn" type="submit" title="{{ 'Scan templates for translations'|t('pragmatic-translations') }}" aria-label="{{ 'Scan templates for translations'|t('pragmatic-translations') }}">
-              <span class="icon" data-icon="refresh" aria-hidden="true"></span>
-            </button>
-          </form>
           <button class="btn" id="add-row" type="button">{{ "Add Row"|t('pragmatic-translations') }}</button>
           <button class="btn submit" type="submit">{{ "Save"|t('pragmatic-translations') }}</button>
         </div>
