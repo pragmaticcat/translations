@@ -330,6 +330,11 @@ class TranslationsController extends Controller
             throw new BadRequestHttpException('Invalid translations payload.');
         }
 
+        $deleteRow = Craft::$app->getRequest()->getBodyParam('deleteRow');
+        if ($deleteRow !== null && isset($items[$deleteRow])) {
+            $items[$deleteRow]['delete'] = 1;
+        }
+
         $sites = Craft::$app->getSites()->getAllSites();
         $languageMap = $this->getLanguageMap($sites);
         $items = $this->expandLanguageValuesToSites($items, $languageMap);

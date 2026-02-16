@@ -91,10 +91,15 @@
               </td>
             {% endfor %}
             <td>
-              <label class="checkbox">
-                <input type="checkbox" name="translations[{{ loop.index0 }}][delete]" value="1">
-                <span></span>
-              </label>
+              <button
+                class="btn small danger"
+                type="submit"
+                name="deleteRow"
+                value="{{ loop.index0 }}"
+                title="{{ 'Delete'|t('pragmatic-translations') }}"
+              >
+                {{ 'Delete'|t('pragmatic-translations') }}
+              </button>
             </td>
           </tr>
         {% endfor %}
