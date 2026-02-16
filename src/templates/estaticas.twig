@@ -24,6 +24,38 @@
             </button>
           </form>
         </div>
+        <div class="buttons" style="margin-block:0;">
+          <button class="btn" id="add-row" type="button">{{ "Add Row"|t('pragmatic-translations') }}</button>
+          <button class="btn submit" type="submit">{{ "Save"|t('pragmatic-translations') }}</button>
+        </div>
+      </div>
+      <div class="flex align-center">
+        <form method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+          {{ csrfInput() }}
+          {{ actionInput('pragmatic-translations/translations/import') }}
+          {{ redirectInput('pragmatic-translations/static', { group: group, q: search, perPage: perPage, page: page, site: selectedSite.handle }) }}
+          <div class="flex" style="gap: 8px; align-items: flex-end;">
+            <div>
+              <label for="format">{{ "Format"|t('pragmatic-translations') }}</label>
+              <div class="select">
+                <select id="format" name="format">
+                  <option value="csv">CSV</option>
+                  <option value="json">JSON</option>
+                  <option value="php">PHP (ZIP)</option>
+                </select>
+              </div>
+            </div>
+            <input type="file" name="file" required>
+            <button class="btn" type="submit">{{ "Import"|t('pragmatic-translations') }}</button>
+          </div>
+        </form>
+      </div>
+  </div>
+
+  <hr style="margin: 24px 0;">
+
+  <div class="flex flex-row align-center" style="margin-top: 12px; gap: 16px; justify-content: space-between; width:100%;">
+      <div class="flex align-center">
         <form method="get" id="entries-filter" class="flex" style="gap: 12px; align-items: flex-end;">
           <input type="hidden" name="page" value="1">
           <input type="hidden" name="site" value="{{ selectedSite.handle }}">
@@ -56,31 +88,12 @@
             </div>
           </div>
         </form>
+      </div>
+      <div class="flex align-center">
         <div class="buttons" style="margin-block:0;">
           <button class="btn" id="add-row" type="button">{{ "Add Row"|t('pragmatic-translations') }}</button>
           <button class="btn submit" type="submit">{{ "Save"|t('pragmatic-translations') }}</button>
         </div>
-      </div>
-      <div class="flex align-center">
-        <form method="post" enctype="multipart/form-data" accept-charset="UTF-8">
-          {{ csrfInput() }}
-          {{ actionInput('pragmatic-translations/translations/import') }}
-          {{ redirectInput('pragmatic-translations/static', { group: group, q: search, perPage: perPage, page: page, site: selectedSite.handle }) }}
-          <div class="flex" style="gap: 8px; align-items: flex-end;">
-            <div>
-              <label for="format">{{ "Format"|t('pragmatic-translations') }}</label>
-              <div class="select">
-                <select id="format" name="format">
-                  <option value="csv">CSV</option>
-                  <option value="json">JSON</option>
-                  <option value="php">PHP (ZIP)</option>
-                </select>
-              </div>
-            </div>
-            <input type="file" name="file" required>
-            <button class="btn" type="submit">{{ "Import"|t('pragmatic-translations') }}</button>
-          </div>
-        </form>
       </div>
   </div>
 
