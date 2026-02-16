@@ -4,8 +4,8 @@
 {% set selectedTab = 'options' %}
 
 {% set crumbs = [
-    { label: "Translations"|t('pragmatic-translations'), url: url('pragmatic-translations') },
-    { label: "Options"|t('pragmatic-translations'), url: url('pragmatic-translations/options') },
+    { label: "Translations"|t('pragmatic-translations'), url: url('pragmatic-translations', { site: selectedSite.handle }) },
+    { label: "Options"|t('pragmatic-translations'), url: url('pragmatic-translations/options', { site: selectedSite.handle }) },
 ] %}
 
 {% import "_includes/forms" as forms %}
@@ -15,7 +15,7 @@
   <form method="post" accept-charset="UTF-8" style="margin-top: 12px;">
     {{ csrfInput() }}
     {{ actionInput('pragmatic-translations/translations/save-options') }}
-    {{ redirectInput('pragmatic-translations/options') }}
+    {{ redirectInput('pragmatic-translations/options', { site: selectedSite.handle }) }}
 
     {% if not autotranslateAvailable %}
       <p class="warning">{{ autotranslateDisabledReason }}</p>

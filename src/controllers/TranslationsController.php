@@ -7,7 +7,8 @@ use craft\web\Controller;
 use pragmatic\translations\PragmaticTranslations;
 use craft\fields\PlainText;
 use craft\elements\Entry;
-use craft\models\Section;
+use craft\helpers\Cp;
+use craft\helpers\UrlHelper;
 use yii\web\BadRequestHttpException;
 use yii\web\Response;
 
@@ -35,6 +36,8 @@ class TranslationsController extends Controller
 
     public function actionEntries(): Response
     {
+        $selectedSite = Cp::requestedSite() ?? Craft::$app->getSites()->getPrimarySite();
+        $selectedSiteId = (int)$selectedSite->id;
         $sites = Craft::$app->getSites()->getAllSites();
         $languages = $this->getLanguages($sites);
         $request = Craft::$app->getRequest();
@@ -57,6 +60,8 @@ class TranslationsController extends Controller
         }
 
         return $this->renderTemplate('pragmatic-translations/estaticas', [
+            'selectedSite' => $selectedSite,
+            'selectedSiteId' => $selectedSiteId,
             'sites' => $sites,
             'languages' => $languages,
             'translations' => $translations,
@@ -72,19 +77,10 @@ class TranslationsController extends Controller
 
     public function actionImportExport(): Response
     {
-        $request = Craft::$app->getRequest();
-        $search = (string)$request->getParam('q', '');
-        $group = (string)$request->getParam('group', 'site');
-        $perPage = (int)$request->getParam('perPage', 50);
-        if (!in_array($perPage, [50, 100, 250], true)) {
-            $perPage = 50;
-        }
-
-        return $this->renderTemplate('pragmatic-translations/import-export', [
-            'search' => $search,
-            'group' => $group,
-            'perPage' => $perPage,
-        ]);
+        return $this->redirect(UrlHelper::url(
+            'pragmatic-translations/static',
+            Craft::$app->getRequest()->getQueryParams(),
+        ));
     }
 
     public function actionGroups(): Response
@@ -100,13 +96,14 @@ class TranslationsController extends Controller
         $page = max(1, (int)$request->getParam('page', 1));
         $sectionId = (int)$request->getParam('section', 0);
         $fieldFilter = (string)$request->getParam('field', '');
+        $selectedSite = Cp::requestedSite() ?? Craft::$app->getSites()->getPrimarySite();
+        $selectedSiteId = (int)$selectedSite->id;
 
         $sites = Craft::$app->getSites()->getAllSites();
         $languages = $this->getLanguages($sites);
         $languageMap = $this->getLanguageMap($sites);
 
-        $primarySiteId = Craft::$app->getSites()->getPrimarySite()->id;
-        $entryQuery = Entry::find()->siteId($primarySiteId)->status(null);
+        $entryQuery = Entry::find()->siteId($selectedSiteId)->status(null);
         if ($sectionId) {
             $entryQuery->sectionId($sectionId);
         }
@@ -123,14 +120,7 @@ class TranslationsController extends Controller
 
             $eligibleFields = [];
             foreach ($fields as $field) {
-                $isEligible = ($field instanceof PlainText) || (get_class($field) === 'craft\\ckeditor\\Field');
-                if (!$isEligible) {
-                    continue;
-                }
-                if ($field->translationMethod === \craft\base\Field::TRANSLATION_METHOD_NONE) {
-                    continue;
-                }
-                if ($fieldFilter !== '' && $field->handle !== $fieldFilter) {
+                if (!$this->isEligibleTranslatableField($field, $fieldFilter)) {
                     continue;
                 }
                 $eligibleFields[] = $field;
@@ -205,7 +195,7 @@ class TranslationsController extends Controller
             $entryRowCounts[$id] = ($entryRowCounts[$id] ?? 0) + 1;
         }
 
-        $sections = Craft::$app->entries->getAllSections();
+        $sections = $this->getEntrySectionsForSite($selectedSiteId, $sectionId, $fieldFilter);
         $fieldOptions = $this->getEntryFieldOptions();
 
         $settings = PragmaticTranslations::$plugin->getSettings();
@@ -218,6 +208,8 @@ class TranslationsController extends Controller
             'languages' => $languages,
             'languageMap' => $languageMap,
             'sections' => $sections,
+            'selectedSite' => $selectedSite,
+            'selectedSiteId' => $selectedSiteId,
             'sectionId' => $sectionId,
             'fieldFilter' => $fieldFilter,
             'search' => $search,
@@ -277,6 +269,8 @@ class TranslationsController extends Controller
 
     public function actionOptions(): Response
     {
+        $selectedSite = Cp::requestedSite() ?? Craft::$app->getSites()->getPrimarySite();
+        $selectedSiteId = (int)$selectedSite->id;
         $request = Craft::$app->getRequest();
         $search = (string)$request->getParam('q', '');
         $group = (string)$request->getParam('group', 'site');
@@ -298,6 +292,8 @@ class TranslationsController extends Controller
         }
 
         return $this->renderTemplate('pragmatic-translations/options', [
+            'selectedSite' => $selectedSite,
+            'selectedSiteId' => $selectedSiteId,
             'search' => $search,
             'group' => $group,
             'perPage' => $perPage,
@@ -711,17 +707,88 @@ class TranslationsController extends Controller
 
         $fields = Craft::$app->getFields()->getAllFields();
         foreach ($fields as $field) {
-            $isEligible = ($field instanceof PlainText) || (get_class($field) === 'craft\\ckeditor\\Field');
-            if (!$isEligible) {
-                continue;
-            }
-            if ($field->translationMethod === \craft\base\Field::TRANSLATION_METHOD_NONE) {
+            if (!$this->isEligibleTranslatableField($field)) {
                 continue;
             }
             $options[] = ['value' => $field->handle, 'label' => $field->name];
         }
 
         return $options;
+    }
+
+    private function isEligibleTranslatableField(mixed $field, string $fieldFilter = ''): bool
+    {
+        $isEligibleType = ($field instanceof PlainText) || (get_class($field) === 'craft\\ckeditor\\Field');
+        if (!$isEligibleType) {
+            return false;
+        }
+
+        if ($field->translationMethod === \craft\base\Field::TRANSLATION_METHOD_NONE) {
+            return false;
+        }
+
+        if ($fieldFilter !== '' && $fieldFilter !== 'title' && $field->handle !== $fieldFilter) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function entryHasEligibleTranslatableFields(Entry $entry, string $fieldFilter = ''): bool
+    {
+        if ($fieldFilter === '' || $fieldFilter === 'title') {
+            return true;
+        }
+
+        foreach ($entry->getFieldLayout()?->getCustomFields() ?? [] as $field) {
+            if ($this->isEligibleTranslatableField($field, $fieldFilter)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function getEntrySectionsForSite(int $siteId, int $selectedSectionId = 0, string $fieldFilter = ''): array
+    {
+        $sectionCounts = [];
+        $entries = Entry::find()
+            ->siteId($siteId)
+            ->status(null)
+            ->all();
+
+        foreach ($entries as $entry) {
+            if (!$this->entryHasEligibleTranslatableFields($entry, $fieldFilter)) {
+                continue;
+            }
+
+            $section = $entry->getSection();
+            if (!$section) {
+                continue;
+            }
+
+            $id = (int)$section->id;
+            $sectionCounts[$id] = ($sectionCounts[$id] ?? 0) + 1;
+        }
+
+        $rows = [];
+        foreach (Craft::$app->entries->getAllSections() as $section) {
+            $id = (int)$section->id;
+            if (isset($sectionCounts[$id])) {
+                $rows[$id] = ['id' => $id, 'name' => $section->name, 'count' => $sectionCounts[$id]];
+            }
+        }
+
+        if ($selectedSectionId && !isset($rows[$selectedSectionId])) {
+            $selectedSection = Craft::$app->entries->getSectionById($selectedSectionId);
+            if ($selectedSection) {
+                $rows[$selectedSectionId] = ['id' => $selectedSectionId, 'name' => $selectedSection->name, 'count' => 0];
+            }
+        }
+
+        usort($rows, fn($a, $b) => $b['count'] <=> $a['count'] ?: strcmp($a['name'], $b['name']));
+
+        return array_values($rows);
     }
 
     private function expandLanguageValuesToSites(array $items, array $languageMap): array
