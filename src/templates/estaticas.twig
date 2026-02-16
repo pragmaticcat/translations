@@ -13,46 +13,6 @@
 
   <div class="flex flex-row align-center" style="margin-top: 12px; gap: 16px; justify-content: space-between; width:100%;">
       <div class="flex align-center">
-        <div class="buttons" style="margin-block:0;">
-          <form method="post" accept-charset="UTF-8" style="display:inline-block;">
-            {{ csrfInput() }}
-            {{ actionInput('pragmatic-translations/translations/scan-templates') }}
-            {{ redirectInput('pragmatic-translations/static', { group: group, q: search, perPage: perPage, page: page, site: selectedSite.handle }) }}
-            <input type="hidden" name="group" value="{{ group }}">
-            <button class="btn flex" type="submit">
-              <span class="icon" data-icon="refresh" aria-hidden="true"></span>
-              <span style="margin-left: 2px;">{{ 'Scan templates for translations'|t('pragmatic-translations') }}</span>
-            </button>
-          </form>
-        </div>
-      </div>
-      <div class="flex align-center">
-        <form method="post" enctype="multipart/form-data" accept-charset="UTF-8">
-          {{ csrfInput() }}
-          {{ actionInput('pragmatic-translations/translations/import') }}
-          {{ redirectInput('pragmatic-translations/static', { group: group, q: search, perPage: perPage, page: page, site: selectedSite.handle }) }}
-          <div class="flex" style="gap: 8px; align-items: flex-end;">
-            <div>
-              <label for="format">{{ "Format"|t('pragmatic-translations') }}</label>
-              <div class="select">
-                <select id="format" name="format">
-                  <option value="csv">CSV</option>
-                  <option value="json">JSON</option>
-                  <option value="php">PHP (ZIP)</option>
-                </select>
-              </div>
-            </div>
-            <input type="file" name="file" required>
-            <button class="btn" type="submit">{{ "Import"|t('pragmatic-translations') }}</button>
-          </div>
-        </form>
-      </div>
-  </div>
-
-  <hr style="margin: 24px 0;">
-
-  <div class="flex flex-row align-center" style="margin-top: 12px; gap: 16px; justify-content: space-between; width:100%;">
-      <div class="flex align-center">
         <form method="get" id="entries-filter" class="flex" style="gap: 12px; align-items: flex-end;">
           <input type="hidden" name="page" value="1">
           <input type="hidden" name="site" value="{{ selectedSite.handle }}">
@@ -174,6 +134,46 @@
         <a class="btn" href="{{ url('pragmatic-translations/export', { format: 'json', site: selectedSite.handle }) }}">{{ "Export JSON"|t('pragmatic-translations') }}</a>
         <a class="btn" href="{{ url('pragmatic-translations/export', { format: 'php', site: selectedSite.handle }) }}">{{ "Export PHP"|t('pragmatic-translations') }}</a>
       </div>
+    </div>
+  </div>
+
+  <hr style="margin: 24px 0;">
+  
+  <div class="flex flex-row align-center" style="margin-top: 12px; gap: 16px; justify-content: space-between; width:100%;">
+    <div class="flex align-center">
+      <div class="buttons" style="margin-block:0;">
+        <form method="post" accept-charset="UTF-8" style="display:inline-block;">
+          {{ csrfInput() }}
+          {{ actionInput('pragmatic-translations/translations/scan-templates') }}
+          {{ redirectInput('pragmatic-translations/static', { group: group, q: search, perPage: perPage, page: page, site: selectedSite.handle }) }}
+          <input type="hidden" name="group" value="{{ group }}">
+          <button class="btn flex" type="submit">
+            <span class="icon" data-icon="refresh" aria-hidden="true"></span>
+            <span>{{ 'Scan templates for translations'|t('pragmatic-translations') }}</span>
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="flex align-center">
+      <form method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+        {{ csrfInput() }}
+        {{ actionInput('pragmatic-translations/translations/import') }}
+        {{ redirectInput('pragmatic-translations/static', { group: group, q: search, perPage: perPage, page: page, site: selectedSite.handle }) }}
+        <div class="flex" style="gap: 8px; align-items: flex-end;">
+          <div>
+            <label for="format">{{ "Format"|t('pragmatic-translations') }}</label>
+            <div class="select">
+              <select id="format" name="format">
+                <option value="csv">CSV</option>
+                <option value="json">JSON</option>
+                <option value="php">PHP (ZIP)</option>
+              </select>
+            </div>
+          </div>
+          <input type="file" name="file" required>
+          <button class="btn" type="submit">{{ "Import"|t('pragmatic-translations') }}</button>
+        </div>
+      </form>
     </div>
   </div>
 
